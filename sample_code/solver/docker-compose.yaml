@@ -1,0 +1,5 @@
+services:
+  math-server:
+    image: jonbodner/math-server
+    ports:
+      - "8080:8080"

@@ -1,8 +1,9 @@
 package pubadder_test
 
 import (
-	"github.com/learning-go-book-2e/ch15/sample_code/pubadder"
 	"testing"
+
+	"github.com/learning-go-book-3e/ch15/sample_code/pubadder"
 )
 
 func TestAddNumbers(t *testing.T) {

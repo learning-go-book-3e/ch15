@@ -3,11 +3,28 @@ package solver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 )
+
+type RequestErr struct {
+	StatusCode int
+	Contents   string
+}
+
+func (ue *RequestErr) Error() string {
+	return fmt.Sprintf("unexpected status code %d with contents %s", ue.StatusCode, ue.Contents)
+}
+
+func (ue *RequestErr) Is(err error) bool {
+	if e, ok := errors.AsType[*RequestErr](err); ok {
+		return e.Contents == ue.Contents && e.StatusCode == ue.StatusCode
+	}
+	return false
+}
 
 type RemoteSolver struct {
 	MathServerURL string
@@ -30,7 +47,10 @@ func (rs RemoteSolver) Resolve(ctx context.Context, expression string) (float64,
 		return 0, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return 0, errors.New(string(contents))
+		return 0, &RequestErr{
+			StatusCode: resp.StatusCode,
+			Contents:   string(contents),
+		}
 	}
 	result, err := strconv.ParseFloat(string(contents), 64)
 	if err != nil {

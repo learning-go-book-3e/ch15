@@ -9,8 +9,8 @@ func FileLen(f string, bufsize int) (int, error) {
 	}
 	defer file.Close()
 	count := 0
+	buf := make([]byte, bufsize)
 	for {
-		buf := make([]byte, bufsize)
 		num, err := file.Read(buf)
 		count += num
 		if err != nil {

@@ -1,7 +1,7 @@
 package testmain
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
@@ -10,17 +10,17 @@ import (
 var testTime time.Time
 
 func TestMain(m *testing.M) {
-	fmt.Println("Set up stuff for tests here")
+	slog.Info("Set up stuff for tests here")
 	testTime = time.Now()
 	exitVal := m.Run()
-	fmt.Println("Clean up stuff after tests here")
+	slog.Info("Clean up stuff after tests here")
 	os.Exit(exitVal)
 }
 
 func TestFirst(t *testing.T) {
-	fmt.Println("TestFirst uses stuff set up in TestMain", testTime)
+	t.Log("TestFirst uses stuff set up in TestMain", testTime)
 }
 
 func TestSecond(t *testing.T) {
-	fmt.Println("TestSecond also uses stuff set up in TestMain", testTime)
+	t.Log("TestSecond also uses stuff set up in TestMain", testTime)
 }

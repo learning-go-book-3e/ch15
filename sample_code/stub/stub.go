@@ -1,5 +1,25 @@
 package stub
 
+import (
+	"errors"
+	"fmt"
+)
+
+type InvalidIDError struct {
+	ID string
+}
+
+func (ie *InvalidIDError) Error() string {
+	return fmt.Sprintf("invalid id: %s", ie.ID)
+}
+
+func (ie *InvalidIDError) Is(err error) bool {
+	if e, ok := errors.AsType[*InvalidIDError](err); ok {
+		return e.ID == ie.ID
+	}
+	return false
+}
+
 type User struct{}
 type Pet struct {
 	Name string

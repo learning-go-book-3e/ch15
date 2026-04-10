@@ -58,3 +58,27 @@ func TestFileProcessingWithCreateTemp(t *testing.T) {
 		t.Error("unexpected name")
 	}
 }
+
+func TestFileProcessingWithCreateFileHelper(t *testing.T) {
+	fName := createFileHelper(t)
+	// do testing, don't worry about cleanup
+	if !strings.Contains(fName, "tempFile") {
+		t.Error("unexpected name")
+	}
+}
+
+// createFileHelper is a helper function called from multiple tests
+func createFileHelper(t *testing.T) string {
+	t.Helper()
+	tempDir := t.TempDir()
+	f, err := os.CreateTemp(tempDir, "tempFile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := f.Close(); err != nil {
+			t.Fatal(err)
+		}
+	})
+	return f.Name()
+}

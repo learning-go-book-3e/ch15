@@ -1,6 +1,9 @@
 package table
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestDoMath(t *testing.T) {
 	result, err := DoMath(2, 2, "+")
@@ -40,13 +43,15 @@ func TestDoMathTable(t *testing.T) {
 		num2     int
 		op       string
 		expected int
-		errMsg   string
+		err      error
 	}{
-		{"addition", 2, 2, "+", 4, ""},
-		{"subtraction", 2, 2, "-", 0, ""},
-		{"multiplication", 2, 2, "*", 4, ""},
-		{"division", 2, 2, "/", 1, ""},
-		{"bad_division", 2, 0, "/", 0, `division by zero`},
+		{"addition", 2, 2, "+", 4, nil},
+		{"subtraction", 2, 2, "-", 0, nil},
+		{"multiplication", 2, 2, "*", 4, nil},
+		{"division", 2, 2, "/", 1, nil},
+		{"bad_division", 2, 0, "/", 0, ErrDivZero},
+		{"bad_op", 2, 2, "?", 0, &UnknownOpErr{Op: "?"}},
+		{"another_mult", 2, 3, "*", 6, nil},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
@@ -54,13 +59,8 @@ func TestDoMathTable(t *testing.T) {
 			if result != d.expected {
 				t.Errorf("Expected %d, got %d", d.expected, result)
 			}
-			var errMsg string
-			if err != nil {
-				errMsg = err.Error()
-			}
-			if errMsg != d.errMsg {
-				t.Errorf("Expected error message `%s`, got `%s`",
-					d.errMsg, errMsg)
+			if !errors.Is(err, d.err) {
+				t.Errorf("expected %v, got %v", d.err, err)
 			}
 		})
 	}

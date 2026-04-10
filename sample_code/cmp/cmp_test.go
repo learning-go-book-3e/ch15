@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestCreatePerson(t *testing.T) {
@@ -23,10 +24,7 @@ func TestCreatePersonIgnoreDate(t *testing.T) {
 		Age:  37,
 	}
 	result := CreatePerson("Dennis", 37)
-	comparer := cmp.Comparer(func(x, y Person) bool {
-		return x.Name == y.Name && x.Age == y.Age
-	})
-	if diff := cmp.Diff(expected, result, comparer); diff != "" {
+	if diff := cmp.Diff(expected, result, cmpopts.IgnoreFields(Person{}, "DateAdded")); diff != "" {
 		t.Error(diff)
 	}
 	if result.DateAdded.IsZero() {

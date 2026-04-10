@@ -2,24 +2,23 @@ package stub
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-type GetPetNamesStub struct {
+type getPetNamesStub struct {
 	Entities
 }
 
-func (ps GetPetNamesStub) GetPets(userID string) ([]Pet, error) {
+func (ps getPetNamesStub) GetPets(userID string) ([]Pet, error) {
 	switch userID {
 	case "1":
 		return []Pet{{Name: "Bubbles"}}, nil
 	case "2":
 		return []Pet{{Name: "Stampy"}, {Name: "Snowball II"}}, nil
 	default:
-		return nil, fmt.Errorf("invalid id: %s", userID)
+		return nil, &InvalidIDError{ID: userID}
 	}
 }
 
@@ -28,17 +27,18 @@ func TestLogicGetPetNames(t *testing.T) {
 		name     string
 		userID   string
 		petNames []string
+		err      error
 	}{
-		{"case1", "1", []string{"Bubbles"}},
-		{"case2", "2", []string{"Stampy", "Snowball II"}},
-		{"case3", "3", nil},
+		{"case1", "1", []string{"Bubbles"}, nil},
+		{"case2", "2", []string{"Stampy", "Snowball II"}, nil},
+		{"case3", "3", nil, &InvalidIDError{ID: "3"}},
 	}
-	l := Logic{GetPetNamesStub{}}
+	l := Logic{getPetNamesStub{}}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			petNames, err := l.GetPetNames(d.userID)
-			if err != nil && d.userID != "3" {
-				t.Error(err)
+			if !errors.Is(err, d.err) {
+				t.Errorf("expected error %v, got %v", d.err, err)
 			}
 			if diff := cmp.Diff(d.petNames, petNames); diff != "" {
 				t.Error(diff)
@@ -47,7 +47,7 @@ func TestLogicGetPetNames(t *testing.T) {
 	}
 }
 
-type EntitiesStub struct {
+type entitiesStub struct {
 	getUser     func(id string) (User, error)
 	getPets     func(userID string) ([]Pet, error)
 	getChildren func(userID string) ([]Person, error)
@@ -55,23 +55,23 @@ type EntitiesStub struct {
 	saveUser    func(user User) error
 }
 
-func (es EntitiesStub) GetUser(id string) (User, error) {
+func (es entitiesStub) GetUser(id string) (User, error) {
 	return es.getUser(id)
 }
 
-func (es EntitiesStub) GetPets(userID string) ([]Pet, error) {
+func (es entitiesStub) GetPets(userID string) ([]Pet, error) {
 	return es.getPets(userID)
 }
 
-func (es EntitiesStub) GetChildren(userID string) ([]Person, error) {
+func (es entitiesStub) GetChildren(userID string) ([]Person, error) {
 	return es.getChildren(userID)
 }
 
-func (es EntitiesStub) GetFriends(userID string) ([]Person, error) {
+func (es entitiesStub) GetFriends(userID string) ([]Person, error) {
 	return es.getFriends(userID)
 }
 
-func (es EntitiesStub) SaveUser(user User) error {
+func (es entitiesStub) SaveUser(user User) error {
 	return es.saveUser(user)
 }
 
@@ -81,32 +81,28 @@ func TestLogicGetPetNames2(t *testing.T) {
 		getPets  func(userID string) ([]Pet, error)
 		userID   string
 		petNames []string
-		errMsg   string
+		err      error
 	}{
 		{"case1", func(userID string) ([]Pet, error) {
 			return []Pet{{Name: "Bubbles"}}, nil
-		}, "1", []string{"Bubbles"}, ""},
+		}, "1", []string{"Bubbles"}, nil},
 		{"case2", func(userID string) ([]Pet, error) {
 			return []Pet{{Name: "Stampy"}, {Name: "Snowball II"}}, nil
-		}, "2", []string{"Stampy", "Snowball II"}, ""},
+		}, "2", []string{"Stampy", "Snowball II"}, nil},
 		{"case3", func(userID string) ([]Pet, error) {
-			return nil, errors.New("invalid id: 3")
-		}, "3", nil, "invalid id: 3"},
+			return nil, &InvalidIDError{ID: "3"}
+		}, "3", nil, &InvalidIDError{ID: "3"}},
 	}
 	l := Logic{}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			l.Entities = EntitiesStub{getPets: d.getPets}
+			l.Entities = entitiesStub{getPets: d.getPets}
 			petNames, err := l.GetPetNames(d.userID)
 			if diff := cmp.Diff(d.petNames, petNames); diff != "" {
 				t.Error(diff)
 			}
-			var errMsg string
-			if err != nil {
-				errMsg = err.Error()
-			}
-			if errMsg != d.errMsg {
-				t.Errorf("Expected error `%s`, got `%s`", d.errMsg, errMsg)
+			if !errors.Is(err, d.err) {
+				t.Errorf("Expected error %v, got %v", d.err, err)
 			}
 		})
 	}
