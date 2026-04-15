@@ -2,7 +2,7 @@ package bench
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"testing"
 )
@@ -16,7 +16,7 @@ func TestMain(m *testing.M) {
 
 // makeData makes our data file for us. Rather than checking in a large file, we recreate it for the test.
 // By setting the random seed to the same value every time, we ensure that we generate the same file every time.
-// This random seed generates a file that's 65,204 bytes long.
+// This random seed generates a file that's 64,847 bytes long.
 func makeData() {
 	file, err := os.Create("testdata/data.txt")
 	if err != nil {
@@ -24,19 +24,19 @@ func makeData() {
 	}
 	defer file.Close()
 
-	rand.Seed(1)
-	for i := 0; i < 10000; i++ {
-		data := makeWord(rand.Intn(10) + 1)
+	r := rand.New(rand.NewPCG(0, 0))
+	for range 10_000 {
+		data := makeWord(r, r.IntN(10)+1)
 		file.Write(data)
 	}
 }
 
-func makeWord(l int) []byte {
-	out := make([]byte, l+1)
-	for i := 0; i < l; i++ {
-		out[i] = 'a' + byte(rand.Intn(26))
+func makeWord(r *rand.Rand, wordLen int) []byte {
+	out := make([]byte, wordLen+1)
+	for i := range wordLen {
+		out[i] = 'a' + byte(r.IntN(26))
 	}
-	out[l] = '\n'
+	out[wordLen] = '\n'
 	return out
 }
 
@@ -45,8 +45,8 @@ func TestFileLen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result != 65204 {
-		t.Error("Expected 65204, got", result)
+	if result != 64_847 {
+		t.Error("Expected 64,847, got", result)
 	}
 }
 

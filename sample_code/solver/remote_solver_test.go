@@ -16,6 +16,12 @@ func TestRemoteSolver_Resolve(t *testing.T) {
 	var io info
 	server := httptest.NewServer(
 		http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			// validate the incoming request to make sure the client is
+			// sending the expected data
+			if req.URL.Query().Get("expression") != io.expression {
+				rw.WriteHeader(http.StatusBadRequest)
+				return
+			}
 			rw.WriteHeader(io.code)
 			rw.Write([]byte(io.body))
 		}))
