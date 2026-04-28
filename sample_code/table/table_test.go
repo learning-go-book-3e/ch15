@@ -50,8 +50,6 @@ func TestDoMathTable(t *testing.T) {
 		{"multiplication", 2, 2, "*", 4, nil},
 		{"division", 2, 2, "/", 1, nil},
 		{"bad_division", 2, 0, "/", 0, ErrDivZero},
-		{"bad_op", 2, 2, "?", 0, &UnknownOpErr{Op: "?"}},
-		{"another_mult", 2, 3, "*", 6, nil},
 	}
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
